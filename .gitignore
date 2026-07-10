@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# uv
+.python-version
+
+# IDEs
+.vscode/
+.idea/
+.zed/
+
+# Android
+.gradle/
+local.properties
+build/
+
+# OS
+.DS_Store
+Thumbs.db
