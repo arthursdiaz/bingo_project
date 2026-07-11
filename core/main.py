@@ -1,5 +1,11 @@
+from server import start_server
+
+
 def main():
-    print("Hello from core!")
+    print("🤖 Bingo Core v0.0.1-alpha")
+    print("Starting server...\n")
+
+    start_server()
 
 
 if __name__ == "__main__":
