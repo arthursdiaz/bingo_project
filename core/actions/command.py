@@ -2,8 +2,16 @@ import subprocess
 
 from protocol import (
     MessageType,
-    create_message
+    create_message,
 )
+
+PROGRAMS = {
+    "system_settings": "systemsettings",
+    "firefox": "firefox",
+    "steam": "steam",
+    "zed": "zed",
+    "konsole": "konsole",
+}
 
 
 def execute(message):
@@ -11,20 +19,28 @@ def execute(message):
     command = message.get("command")
     target = message.get("target")
 
-    if command == "open_program":
+    if command != "open_program":
 
-        if target == "system_settings":
+        return create_message(
+            MessageType.STATUS,
+            success=False,
+            message="Invalid command."
+        )
 
-            subprocess.Popen(["systemsettings"])
+    program = PROGRAMS.get(target)
 
-            return create_message(
-                MessageType.STATUS,
-                success=True,
-                message="Opened system settings."
-            )
+    if program is None:
+
+        return create_message(
+            MessageType.STATUS,
+            success=False,
+            message=f"Unknown program: {target}"
+        )
+
+    subprocess.Popen([program])
 
     return create_message(
         MessageType.STATUS,
-        success=False,
-        message="Unknown command."
+        success=True,
+        message=f"Opened {target}."
     )
