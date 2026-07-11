@@ -3,29 +3,36 @@ import asyncio
 import websockets
 
 from bingo.dispatcher import Dispatcher
-
 from bingo.protocol import parse_message
-
 from bingo.config import HOST, PORT
+from bingo.logger import info
+from bingo.logger import success
+from bingo.logger import debug
+from bingo.state import state
 
 dispatcher = Dispatcher()
 
 
 async def handle_client(websocket):
 
-    print("📱 Client connected")
+    state.connected_clients += 1
+    success(f"Client connected ({state.connected_clients} online)")
 
-    async for raw_message in websocket:
+    try:
+            async for raw_message in websocket:
 
-        message = parse_message(raw_message)
+                message = parse_message(raw_message)
 
-        print(message)
+                debug(f"Received: {message}")
 
-        response = dispatcher.dispatch(message)
+                response = dispatcher.dispatch(message)
 
-        if response is not None:
+                if response is not None:
+                    await websocket.send(response)
 
-            await websocket.send(response)
+    finally:
+        state.connected_clients -= 1
+        info(f"Client disconnected ({state.connected_clients} online)")
 
 
 async def server():
@@ -36,7 +43,7 @@ async def server():
         PORT
     ):
 
-        print(f"🌐 Listening on ws://{HOST}:{PORT}")
+        info(f"Listening on ws://{HOST}:{PORT}")
 
         await asyncio.Future()
 

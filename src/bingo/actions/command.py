@@ -1,5 +1,6 @@
 import subprocess
-
+from bingo.state import state
+from bingo.logger import info
 from bingo.protocol import (
     MessageType,
     create_message,
@@ -37,10 +38,26 @@ def execute(message):
             message=f"Unknown program: {target}"
         )
 
-    subprocess.Popen([program])
-
-    return create_message(
-        MessageType.STATUS,
-        success=True,
-        message=f"Opened {target}."
-    )
+    try:
+        subprocess.Popen([program])
+        
+        state.running_programs.add(target)
+        state.last_command = f"open {target}"
+        
+        info(f"Connected clients: {state.connected_clients}")
+        info(f"Running programs: {list(state.running_programs)}")
+        info(f"Last command: {state.last_command}")
+        
+        return create_message(
+            MessageType.STATUS,
+            success=True,
+            message=f"Opened {target}."
+        )
+    
+    except Exception as e:
+    
+        return create_message(
+            MessageType.STATUS,
+            success=False,
+            message=str(e)
+        )
