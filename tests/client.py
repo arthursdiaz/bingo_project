@@ -22,7 +22,15 @@ async def main():
         print("Connected!")
 
         await websocket.send(
-            create_message(MessageType.PING)
+        
+            create_message(
+        
+                MessageType.COMMAND,
+        
+                command="open_program",
+        
+                target="system_settings"
+            )
         )
 
         response = await websocket.recv()

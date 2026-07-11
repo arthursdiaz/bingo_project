@@ -1,13 +1,10 @@
-# TODO:
-# - Command Handler
-# - Speech Handler
-# - Emotion Handler
-# - Status Handler
-
 from protocol import (
     MessageType,
     create_message,
 )
+
+import actions.ping as ping
+import actions.command as command
 
 
 class Dispatcher:
@@ -16,16 +13,23 @@ class Dispatcher:
 
         message_type = message.get("type")
 
-        match message_type:
+        handlers = {
 
-            case MessageType.PING.value:
+            MessageType.PING.value:
+                ping.execute,
 
-                return create_message(
-                    MessageType.PONG
-                )
+            MessageType.COMMAND.value:
+                command.execute,
+        }
 
-            case _:
+        handler = handlers.get(message_type)
 
-                print(f"Unknown message type: {message_type}")
+        if handler:
 
-                return None
+            return handler(message)
+
+        return create_message(
+            MessageType.STATUS,
+            success=False,
+            message="Unknown message type."
+        )
