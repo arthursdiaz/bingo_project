@@ -1,6 +1,6 @@
 import subprocess
 
-from protocol import (
+from bingo.protocol import (
     MessageType,
     create_message,
 )

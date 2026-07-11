@@ -1,4 +1,4 @@
-from protocol import MessageType, create_message
+from bingo.protocol import MessageType, create_message
 
 
 def execute(message):

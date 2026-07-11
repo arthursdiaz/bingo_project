@@ -2,11 +2,11 @@ import asyncio
 
 import websockets
 
-from dispatcher import Dispatcher
+from bingo.dispatcher import Dispatcher
 
-from protocol import parse_message
+from bingo.protocol import parse_message
 
-from config import HOST, PORT
+from bingo.config import HOST, PORT
 
 dispatcher = Dispatcher()
 

@@ -1,5 +1,5 @@
-from server import start_server
-from config import NAME, VERSION
+from bingo.server import start_server
+from bingo.config import NAME, VERSION
 
 def main():
     print(f"🤖 {NAME} Core {VERSION}")

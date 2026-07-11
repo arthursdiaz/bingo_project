@@ -1,10 +1,10 @@
-from protocol import (
+from bingo.protocol import (
     MessageType,
     create_message,
 )
 
-import actions.ping as ping
-import actions.command as command
+from bingo.actions import ping
+from bingo.actions import command
 
 
 class Dispatcher:
