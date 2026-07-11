@@ -7,7 +7,7 @@ from protocol import (
 
 PROGRAMS = {
     "system_settings": "systemsettings",
-    "firefox": "firefox",
+    "vivaldi": "vivaldi",
     "steam": "steam",
     "zed": "zed",
     "konsole": "konsole",

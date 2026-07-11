@@ -1,8 +1,8 @@
 from server import start_server
-
+from config import NAME, VERSION
 
 def main():
-    print("🤖 Bingo Core v0.0.1-alpha")
+    print(f"🤖 {NAME} Core {VERSION}")
     print("Starting server...\n")
 
     start_server()

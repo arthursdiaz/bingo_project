@@ -6,8 +6,7 @@ from dispatcher import Dispatcher
 
 from protocol import parse_message
 
-HOST = "0.0.0.0"
-PORT = 8765
+from config import HOST, PORT
 
 dispatcher = Dispatcher()
 
