@@ -1,5 +1,57 @@
 # 🤖 Bingo
 
-Desktop companion desenvolvido em Python + Android.
+Bingo é um assistente pessoal para Linux desenvolvido em Python.
 
-Status: 🚧 Em desenvolvimento.
+O projeto foi pensado para ser modular, permitindo múltiplos clientes (CLI, Android e ESP32) se comunicarem com um único Core através de WebSockets.
+
+## Funcionalidades
+
+- ✅ Comunicação via WebSocket
+- ✅ Protocolo JSON
+- ✅ Dispatcher de mensagens
+- ✅ Parser de linguagem natural
+- ✅ Execução de comandos no sistema
+- ✅ Cliente CLI
+
+## Estrutura
+
+```
+bingo_project/
+├── src/
+│   └── bingo/
+├── clients/
+├── docs/
+├── mobile/
+└── plugins/
+```
+
+## Tecnologias
+
+- Python 3.14
+- uv
+- WebSockets
+- Git
+
+## Executando
+
+Instalar dependências:
+
+```bash
+uv sync
+```
+
+Executar o Core:
+
+```bash
+uv run python -m bingo.main
+```
+
+Executar o cliente CLI:
+
+```bash
+uv run clients/cli/main.py
+```
+
+## Objetivo
+
+Construir um assistente pessoal modular para Linux, capaz de ser controlado por voz através de um aplicativo Android e futuramente por um display ESP32 personalizado.
