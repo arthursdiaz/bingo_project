@@ -1,17 +1,19 @@
 import asyncio
+
 import websockets
 
-from protocol import (
-    MessageType,
-    create_message,
-    parse_message
-)
+from dispatcher import Dispatcher
+
+from protocol import parse_message
 
 HOST = "0.0.0.0"
 PORT = 8765
 
+dispatcher = Dispatcher()
+
 
 async def handle_client(websocket):
+
     print("📱 Client connected")
 
     async for raw_message in websocket:
@@ -20,17 +22,11 @@ async def handle_client(websocket):
 
         print(message)
 
-        match message["type"]:
+        response = dispatcher.dispatch(message)
 
-            case MessageType.PING.value:
+        if response is not None:
 
-                await websocket.send(
-                    create_message(MessageType.PONG)
-                )
-
-            case _:
-
-                print("Unknown message")
+            await websocket.send(response)
 
 
 async def server():
@@ -47,4 +43,5 @@ async def server():
 
 
 def start_server():
+
     asyncio.run(server())
