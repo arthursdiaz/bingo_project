@@ -1,13 +1,7 @@
-from bingo.speech.service import SpeechService
+from faster_whisper import WhisperModel
 
-
-class WhisperService(SpeechService):
-
-    def transcribe(
-        self,
-        path
-    ):
-
-        print(path)
-
-        return "placeholder"
+model = WhisperModel(
+    "base",
+    device="cpu",
+    compute_type="int8",
+)
