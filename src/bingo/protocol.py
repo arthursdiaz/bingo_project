@@ -16,6 +16,8 @@ class MessageType(str, Enum):
     STATUS = "status"
     STATUS_INFO = "status_info"
 
+    AUDIO = "audio"
+
 
 def create_message(message_type: MessageType, **kwargs):
     """

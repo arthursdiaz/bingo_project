@@ -23,7 +23,12 @@ async def handle_client(websocket):
 
                 message = parse_message(raw_message)
 
-                debug(f"Received: {message}")
+                log_message = message.copy()
+                
+                if log_message.get("type") == "audio":
+                    log_message["data"] = f"<{len(message['data'])} bytes base64>"
+                
+                debug(f"Received: {log_message}")
 
                 try:
                     response = dispatcher.dispatch(message)
