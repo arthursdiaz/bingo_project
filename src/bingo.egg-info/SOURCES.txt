@@ -20,7 +20,10 @@ src/bingo/actions/audio.py
 src/bingo/actions/command.py
 src/bingo/actions/ping.py
 src/bingo/actions/status.py
+src/bingo/client/__init__.py
+src/bingo/client/websocket.py
 src/bingo/speech/__init__.py
+src/bingo/speech/processor.py
 src/bingo/speech/receiver.py
 src/bingo/speech/service.py
 src/bingo/speech/whisper.py

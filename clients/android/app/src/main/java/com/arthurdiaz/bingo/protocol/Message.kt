@@ -38,4 +38,30 @@ object Message {
 
     }
 
+    fun audio(
+        filename: String,
+        data: String
+    ): String {
+
+        return JSONObject()
+
+            .put(
+                "type",
+                MessageType.AUDIO.value
+            )
+
+            .put(
+                "filename",
+                filename
+            )
+
+            .put(
+                "data",
+                data
+            )
+
+            .toString()
+
+    }
+
 }

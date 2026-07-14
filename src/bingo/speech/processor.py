@@ -4,6 +4,7 @@ from bingo.logger import info
 from bingo.parser import parse
 from bingo.speech.receiver import AudioReceiver
 from bingo.speech.whisper import WhisperService
+from bingo.speech.normalizer import SpeechNormalizer
 
 
 class AudioProcessor:
@@ -26,8 +27,16 @@ class AudioProcessor:
 
         info(f"Saved: {path}")
 
-        text = self.whisper.transcribe(path)
+        transcript = self.whisper.transcribe(path)
+
+        normalizer = SpeechNormalizer()
+
+        info(f"Transcript : {transcript}")
+
+        normalized = normalizer.normalize(
+            transcript
+        )
+
+        info(f"Normalized: {normalized}")
         
-        info(f"Transcript: {text}")
-        
-        return parse(text)
+        return parse(normalized)

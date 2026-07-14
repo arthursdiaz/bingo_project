@@ -10,8 +10,8 @@ class WhisperService:
         info("Loading Whisper model...")
 
         self.model = WhisperModel(
-            "base",
-            device="cpu",
+            "small",
+            device="auto",
             compute_type="int8",
         )
 
@@ -22,6 +22,8 @@ class WhisperService:
         segments, info_data = self.model.transcribe(
             str(path),
             language="pt",
+            beam_size=2,
+            condition_on_previous_text=False,
         )
 
         text = ""

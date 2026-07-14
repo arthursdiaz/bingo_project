@@ -23,10 +23,19 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import com.arthurdiaz.bingo.audio.Encoder
+import com.arthurdiaz.bingo.audio.Recorder
 import com.arthurdiaz.bingo.network.BingoSocket
 import com.arthurdiaz.bingo.protocol.Message
 import com.arthurdiaz.bingo.ui.theme.BingoAndroidTheme
+import java.io.File
+import android.Manifest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,6 +60,8 @@ fun BingoScreen(
     modifier: Modifier = Modifier
 ) {
 
+    val context = LocalContext.current
+
     var connected by remember {
         mutableStateOf(false)
     }
@@ -63,8 +74,32 @@ fun BingoScreen(
         mutableStateOf(false)
     }
 
+    var recording by remember {
+        mutableStateOf(false)
+    }
+
     val socket = remember {
         BingoSocket("ws://192.168.0.18:8765")
+    }
+
+    val audioFile = remember {
+        File(
+            context.cacheDir,
+            "audio.m4a"
+        )
+    }
+
+    val recorder = remember {
+        Recorder(audioFile)
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            recorder.start()
+            recording = true
+        }
     }
 
     if (showRosto) {
@@ -188,6 +223,65 @@ fun BingoScreen(
             }
         ) {
             Text("Abrir Rosto")
+        }
+
+        Spacer(
+            modifier = Modifier.height(16.dp)
+        )
+
+        Button(
+
+            onClick = {
+
+                if (!recording) {
+
+                    val permissionCheckResult = ContextCompat.checkSelfPermission(
+                        context,
+                        Manifest.permission.RECORD_AUDIO
+                    )
+
+                    if (permissionCheckResult == PackageManager.PERMISSION_GRANTED) {
+                        recorder.start()
+                        recording = true
+                    } else {
+                        permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                    }
+
+                } else {
+
+                    recorder.stop()
+
+                    val base64 = Encoder.encode(audioFile)
+
+                    socket.send(
+
+                        Message.audio(
+
+                            "audio.m4a",
+
+                            base64
+
+                        )
+
+                    )
+
+                    recording = false
+
+                }
+
+            }
+
+        ) {
+
+            Text(
+
+                if (recording)
+                    "Parar"
+                else
+                    "Gravar"
+
+            )
+
         }
 
         Text("Programas")
