@@ -1,14 +1,11 @@
 import asyncio
 import base64
 
-import websockets
-
-from bingo.config import WEBSOCKET_URL
+from bingo.client.websocket import BingoClient
 from bingo.protocol import (
-    create_message,
+    create_dict,
     MessageType,
 )
-
 
 async def main():
 
@@ -21,22 +18,27 @@ async def main():
             f.read()
         ).decode()
 
-    async with websockets.connect(
-        WEBSOCKET_URL
-    ) as ws:
+    client = BingoClient()
 
-        await ws.send(
+    await client.connect()
 
-            create_message(
+    try:
+
+        await client.send(
+            create_dict(
                 MessageType.AUDIO,
                 filename="audio.wav",
                 data=audio,
             )
-
         )
 
         print(
-            await ws.recv()
+            await client.recv()
         )
+
+    finally:
+
+        await client.close()
+
 
 asyncio.run(main())

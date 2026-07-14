@@ -1,26 +1,10 @@
-import sys
-from pathlib import Path
-
 import asyncio
-import websockets
-
-from bingo.config import WEBSOCKET_URL
+from bingo.client.websocket import BingoClient
 from bingo.parser import parse
 from bingo.protocol import (
     MessageType,
-    create_message,
-    parse_message,
-    encode_message
+    create_dict,
 )
-
-HELP = """
-Comandos:
-
-ping
-
-exit
-"""
-
 
 async def main():
 
@@ -28,9 +12,11 @@ async def main():
     print("🤖 Bingo CLI")
     print("======================")
 
-    print(HELP)
+    client = BingoClient()
 
-    async with websockets.connect(WEBSOCKET_URL) as websocket:
+    await client.connect()
+    
+    try:
 
         while True:
 
@@ -40,36 +26,28 @@ async def main():
                 break
 
             if command == "ping":
-
-                await websocket.send(
-                    create_message(
-                        MessageType.PING
-                    )
+            
+                await client.send(
+                    create_dict(MessageType.PING)
                 )
+            
             elif command == "status":
             
-                await websocket.send(
-                    create_message(
-                        MessageType.STATUS
-                    )
+                await client.send(
+                    create_dict(MessageType.STATUS)
                 )
-
+            
             else:
-
+            
                 message = parse(command)
-
+            
                 if message is None:
-
-                    print("❌ Não entendi esse comando.")
+                    print("❌ Não entendi.")
                     continue
-
-                await websocket.send(
-                    encode_message(message)
-                )
-
-            response = parse_message(
-                await websocket.recv()
-            )
+            
+                await client.send(message)
+            
+            response = await client.recv()
 
             if response["type"] == "status_info":
             
@@ -95,4 +73,7 @@ async def main():
             else:
                 print(response)
             
+    finally:
+        await client.close()
+
 asyncio.run(main())
