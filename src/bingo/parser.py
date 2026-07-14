@@ -17,6 +17,7 @@ ALIASES = {
     "console": "konsole",
 
     "vivaldi": "vivaldi",
+    "navegador": "vivaldi",
 
     "steam": "steam",
 
