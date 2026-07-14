@@ -13,8 +13,10 @@ __pycache__/
 
 # Android
 .gradle/
+.idea/
 local.properties
-build/
+**/build/
+captures/
 
 # OS
 .DS_Store

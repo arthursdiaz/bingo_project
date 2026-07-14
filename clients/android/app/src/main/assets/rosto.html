@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Rosto do BMO</title>
+    <style>
+        body {
+          margin: 0;
+          height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #1b2b34;
+          font-family: sans-serif;
+        }
+
+        .screen {
+          width: 320px;
+          height: 260px;
+          background: #dfeeea;
+          border-radius: 18px;
+          border: 8px solid #3a4a44;
+          box-shadow: inset 0 0 0 4px #b8d8c8, 0 10px 30px rgba(0,0,0,0.5);
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .eyes {
+          display: flex;
+          gap: 55px;
+          margin-bottom: 25px;
+        }
+
+        .eye {
+          width: 34px;
+          height: 46px;
+          background: #26332e;
+          border-radius: 50%;
+          animation: blink 4.5s infinite;
+          transform-origin: center;
+        }
+
+        .eye::after {
+          content: "";
+          position: absolute;
+        }
+
+        @keyframes blink {
+          0%, 92%, 100% { transform: scaleY(1); }
+          95% { transform: scaleY(0.08); }
+        }
+
+        .mouth {
+          width: 90px;
+          height: 45px;
+          border-bottom: 8px solid #26332e;
+          border-radius: 0 0 50px 50px;
+          animation: talk 2.2s ease-in-out infinite;
+        }
+
+        @keyframes talk {
+          0%, 100% { height: 45px; }
+          50% { height: 25px; }
+        }
+
+        .cheeks {
+          position: absolute;
+          bottom: 55px;
+          width: 100%;
+          display: flex;
+          justify-content: space-between;
+          padding: 0 25px;
+          box-sizing: border-box;
+        }
+
+        .cheek {
+          width: 22px;
+          height: 14px;
+          background: #ffb6c1;
+          border-radius: 50%;
+          opacity: 0.55;
+        }
+    </style>
+</head>
+<body>
+
+<div class="screen">
+    <div class="eyes">
+        <div class="eye"></div>
+        <div class="eye" style="animation-delay: 0.05s;"></div>
+    </div>
+    <div class="mouth"></div>
+    <div class="cheeks">
+        <div class="cheek"></div>
+        <div class="cheek"></div>
+    </div>
+</div>
+
+</body>
+</html>
