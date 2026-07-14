@@ -1,48 +1,31 @@
-# 🛣️ Roadmap
+# Bingo Roadmap
 
-## v0.1.0-alpha
-
+## Core
 - [x] WebSocket
 - [x] JSON Protocol
 - [x] Dispatcher
-- [x] CLI
+- [x] Actions
 - [x] Parser
-- [x] Linux Actions
+- [x] Logger
+- [x] State
+- [x] CLI Client
+- [x] Audio Client
+- [x] Whisper STT
+- [x] Voice → Command Pipeline
+- [x] Shared BingoClient API
 
----
+## Android
+- [ ] Android project
+- [ ] WebSocket client
+- [ ] Audio recording
+- [ ] Send audio
+- [ ] Receive responses
+- [ ] History
+- [ ] Settings
 
-## v0.2.0
-
-- [ ] Cliente Android
-- [ ] Reconhecimento de voz
-- [ ] Controle de volume
-- [ ] Controle de mídia
-- [ ] Abrir programas por voz
-
----
-
-## v0.3.0
-
-- [ ] Cliente ESP32
-- [ ] Display TFT
-- [ ] Rosto em pixel art
-- [ ] Animações
-- [ ] Microfone dedicado
-- [ ] Alto-falante
-
----
-
-## v0.5.0
-
+## Future
+- [ ] Wake Word
+- [ ] TTS
+- [ ] LLM
 - [ ] Plugins
-- [ ] Configuração por arquivos
-- [ ] Sistema de eventos
-
----
-
-## v1.0
-
-- [ ] Memória
-- [ ] IA local
-- [ ] Automações
-- [ ] Integração Android + ESP32
+- [ ] GUI Client
