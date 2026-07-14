@@ -1,6 +1,7 @@
+import string
 from bingo.protocol import (
     MessageType,
-    create_message,
+    create_dict,
 )
 
 ALIASES = {
@@ -28,6 +29,9 @@ OPEN_WORDS = (
 def parse(text: str):
 
     text = text.lower().strip()
+    text = text.translate(
+        str.maketrans("", "", string.punctuation)
+    )
 
     for word in OPEN_WORDS:
 
@@ -42,7 +46,7 @@ def parse(text: str):
 
             target = ALIASES.get(target, target)
 
-            return create_message(
+            return create_dict(
                 MessageType.COMMAND,
                 command="open_program",
                 target=target,

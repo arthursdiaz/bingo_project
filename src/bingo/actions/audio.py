@@ -7,16 +7,19 @@ from bingo.protocol import (
 
 processor = AudioProcessor()
 
-
 def execute(message):
 
-    text = processor.process(
+    command = processor.process(
         message["filename"],
         message["data"],
     )
 
-    return create_message(
-        MessageType.STATUS,
-        success=True,
-        message=text,
-    )
+    if command is None:
+
+        return create_message(
+            MessageType.STATUS,
+            success=False,
+            message="Couldn't understand speech."
+        )
+
+    return command

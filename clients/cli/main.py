@@ -10,6 +10,7 @@ from bingo.protocol import (
     MessageType,
     create_message,
     parse_message,
+    encode_message
 )
 
 HELP = """
@@ -62,7 +63,9 @@ async def main():
                     print("❌ Não entendi esse comando.")
                     continue
 
-                await websocket.send(message)
+                await websocket.send(
+                    encode_message(message)
+                )
 
             response = parse_message(
                 await websocket.recv()

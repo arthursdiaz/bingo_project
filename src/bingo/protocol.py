@@ -19,10 +19,7 @@ class MessageType(str, Enum):
     AUDIO = "audio"
 
 
-def create_message(message_type: MessageType, **kwargs):
-    """
-    Cria uma mensagem JSON padronizada.
-    """
+def create_dict(message_type: MessageType, **kwargs):
 
     message = {
         "type": message_type.value
@@ -30,8 +27,17 @@ def create_message(message_type: MessageType, **kwargs):
 
     message.update(kwargs)
 
-    return json.dumps(message)
+    return message
 
+
+def create_message(message_type: MessageType, **kwargs):
+
+    return json.dumps(
+        create_dict(
+            message_type,
+            **kwargs
+        )
+    )
 
 def parse_message(raw_message: str):
     """
@@ -39,3 +45,7 @@ def parse_message(raw_message: str):
     """
 
     return json.loads(raw_message)
+
+def encode_message(message: dict):
+
+    return json.dumps(message)

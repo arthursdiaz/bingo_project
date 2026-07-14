@@ -32,7 +32,10 @@ async def handle_client(websocket):
 
                 try:
                     response = dispatcher.dispatch(message)
-                
+                    
+                    while isinstance(response, dict):
+                        response = dispatcher.dispatch(response)
+                    
                     if response is not None:
                         await websocket.send(response)
                 

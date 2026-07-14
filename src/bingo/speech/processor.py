@@ -1,7 +1,7 @@
 import base64
 
 from bingo.logger import info
-
+from bingo.parser import parse
 from bingo.speech.receiver import AudioReceiver
 from bingo.speech.whisper import WhisperService
 
@@ -26,10 +26,8 @@ class AudioProcessor:
 
         info(f"Saved: {path}")
 
-        text = self.whisper.transcribe(
-            path
-        )
-
+        text = self.whisper.transcribe(path)
+        
         info(f"Transcript: {text}")
-
-        return text
+        
+        return parse(text)
