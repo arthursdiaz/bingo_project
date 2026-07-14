@@ -14,11 +14,11 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.arthurdiaz.bingo.audio.VoiceState
-import com.arthurdiaz.bingo.ui.theme.BmoDarkJungle
-import com.arthurdiaz.bingo.ui.theme.BmoMagicMint
+import com.arthurdiaz.bingo.ui.theme.BingoDarkJungle
+import com.arthurdiaz.bingo.ui.theme.BingoMagicMint
 
 @Composable
-fun BmoFaceCard(
+fun BingoFaceCard(
     voiceState: VoiceState,
     modifier: Modifier = Modifier
 ) {
@@ -28,8 +28,8 @@ fun BmoFaceCard(
             .aspectRatio(1.2f)
             .shadow(8.dp, RoundedCornerShape(24.dp))
             .clip(RoundedCornerShape(24.dp))
-            .background(BmoMagicMint)
-            .border(8.dp, BmoDarkJungle, RoundedCornerShape(24.dp))
+            .background(BingoMagicMint)
+            .border(8.dp, BingoDarkJungle, RoundedCornerShape(24.dp))
             .padding(8.dp)
     ) {
         AndroidView(

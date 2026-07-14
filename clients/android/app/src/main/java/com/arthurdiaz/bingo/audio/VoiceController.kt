@@ -8,10 +8,10 @@ import android.os.Looper
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
+import com.arthurdiaz.bingo.audio.feedback.TonePlayer
 import com.arthurdiaz.bingo.network.BingoSocket
 import com.arthurdiaz.bingo.protocol.Message
 import java.io.File
-import java.util.Locale
 
 class VoiceController(
     private val context: Context,
@@ -39,7 +39,6 @@ class VoiceController(
                 override fun onEndOfSpeech() {}
                 override fun onError(error: Int) {
                     if (currentState == VoiceState.IDLE) {
-                        // Restart listening if it's idle and failed
                         startHotwordDetection()
                     }
                 }
@@ -81,6 +80,8 @@ class VoiceController(
     private fun startListeningFlow() {
         currentState = VoiceState.LISTENING
         onStateChanged(VoiceState.LISTENING)
+        
+        TonePlayer.playListening()
 
         recorder.start()
 
@@ -101,16 +102,27 @@ class VoiceController(
         val base64 = Encoder.encode(audioFile)
         socket.send(Message.audio("audio.m4a", base64))
         
-        // Note: Resetting to IDLE happens when a message is received or after a timeout
-        // For now, let's reset after 3 seconds if no response to keep it moving
         handler.postDelayed({
             if (currentState == VoiceState.PROCESSING) {
                 resetToIdle()
             }
-        }, 10000) 
+        }, 12000) 
+    }
+
+    fun onResponseReceived() {
+        if (currentState == VoiceState.PROCESSING) {
+            TonePlayer.playSuccess()
+            resetToIdle()
+        }
+    }
+
+    fun onError() {
+        TonePlayer.playError()
+        resetToIdle()
     }
 
     fun resetToIdle() {
+        handler.removeCallbacksAndMessages(null)
         currentState = VoiceState.IDLE
         onStateChanged(VoiceState.IDLE)
         startHotwordDetection()
