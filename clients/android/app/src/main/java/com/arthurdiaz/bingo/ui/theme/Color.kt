@@ -2,6 +2,15 @@ package com.arthurdiaz.bingo.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
+val BmoTeal = Color(0xFF44B097)
+val BmoLightTeal = Color(0xFF8BBE93)
+val BmoMagicMint = Color(0xFFAFF5BF)
+val BmoDarkJungle = Color(0xFF0A1D20)
+val BmoActionRed = Color(0xFFE76D6D)
+val BmoYellow = Color(0xFFF3D86B)
+val BmoBlue = Color(0xFF529DB7)
+val BmoDarkBlue = Color(0xFF101E2B)
+
 val Purple80 = Color(0xFFD0BCFF)
 val PurpleGrey80 = Color(0xFFCCC2DC)
 val Pink80 = Color(0xFFEFB8C8)

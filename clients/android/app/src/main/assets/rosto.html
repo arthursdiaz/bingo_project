@@ -10,94 +10,142 @@
           display: flex;
           align-items: center;
           justify-content: center;
-          background: #1b2b34;
+          background: transparent;
           font-family: sans-serif;
+          overflow: hidden;
         }
 
         .screen {
-          width: 320px;
-          height: 260px;
-          background: #dfeeea;
-          border-radius: 18px;
-          border: 8px solid #3a4a44;
-          box-shadow: inset 0 0 0 4px #b8d8c8, 0 10px 30px rgba(0,0,0,0.5);
+          width: 100vw;
+          height: 100vh;
+          background: #aff5bf; /* Magic Mint - BMO Style */
           position: relative;
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
+          transition: all 0.5s ease;
         }
 
         .eyes {
           display: flex;
-          gap: 55px;
-          margin-bottom: 25px;
+          gap: 60px;
+          margin-bottom: 20px;
         }
 
         .eye {
-          width: 34px;
-          height: 46px;
-          background: #26332e;
+          width: 32px;
+          height: 32px;
+          background: #0a1d20;
           border-radius: 50%;
           animation: blink 4.5s infinite;
           transform-origin: center;
-        }
-
-        .eye::after {
-          content: "";
-          position: absolute;
+          transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
         @keyframes blink {
           0%, 92%, 100% { transform: scaleY(1); }
-          95% { transform: scaleY(0.08); }
+          95% { transform: scaleY(0.1); }
         }
 
         .mouth {
-          width: 90px;
-          height: 45px;
-          border-bottom: 8px solid #26332e;
-          border-radius: 0 0 50px 50px;
-          animation: talk 2.2s ease-in-out infinite;
+          width: 80px;
+          height: 40px;
+          border-bottom: 8px solid #0a1d20;
+          border-radius: 0 0 40px 40px;
+          transition: all 0.4s ease;
         }
 
-        @keyframes talk {
-          0%, 100% { height: 45px; }
-          50% { height: 25px; }
+        /* SLEEPING State */
+        body.sleeping .screen {
+            background: #8ec3a7;
+            filter: grayscale(0.3) brightness(0.8);
+        }
+        body.sleeping .eye {
+            height: 4px;
+            width: 36px;
+            border-radius: 2px;
+            animation: breathe 3s infinite ease-in-out;
+        }
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); opacity: 0.6; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+        body.sleeping .mouth {
+            width: 30px;
+            height: 15px;
+            border-bottom: 4px solid #0a1d20;
+            opacity: 0.6;
+            border-radius: 0;
         }
 
-        .cheeks {
-          position: absolute;
-          bottom: 55px;
-          width: 100%;
-          display: flex;
-          justify-content: space-between;
-          padding: 0 25px;
-          box-sizing: border-box;
+        /* IDLE State (Default) */
+        body.idle .mouth {
+            animation: idleTalk 10s infinite ease-in-out;
+        }
+        @keyframes idleTalk {
+            0%, 100%, 40%, 60% { height: 40px; transform: scaleX(1); }
+            50% { height: 35px; transform: scaleX(1.05); }
         }
 
-        .cheek {
-          width: 22px;
-          height: 14px;
-          background: #ffb6c1;
-          border-radius: 50%;
-          opacity: 0.55;
+        /* LISTENING State */
+        body.listening .screen {
+            background: #c1f9cf;
+            box-shadow: inset 0 0 50px rgba(255,255,255,0.5);
         }
+        body.listening .eye {
+            width: 45px;
+            height: 45px;
+            animation: none;
+        }
+        body.listening .mouth {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 6px solid #0a1d20;
+            animation: pulse 0.8s infinite ease-in-out;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+
+        /* PROCESSING State */
+        body.processing .eye {
+            width: 40px;
+            height: 10px;
+            border-radius: 5px;
+            animation: thinking 1.5s infinite alternate ease-in-out;
+        }
+        @keyframes thinking {
+            0% { transform: translateX(-15px); }
+            100% { transform: translateX(15px); }
+        }
+        body.processing .mouth {
+            width: 50px;
+            height: 0;
+            border-bottom: 6px solid #0a1d20;
+            border-radius: 0;
+            animation: none;
+        }
+
     </style>
 </head>
-<body>
+<body class="sleeping">
 
 <div class="screen">
     <div class="eyes">
         <div class="eye"></div>
-        <div class="eye" style="animation-delay: 0.05s;"></div>
+        <div class="eye" style="animation-delay: 0.1s;"></div>
     </div>
     <div class="mouth"></div>
-    <div class="cheeks">
-        <div class="cheek"></div>
-        <div class="cheek"></div>
-    </div>
 </div>
+
+<script>
+    function setVoiceState(state) {
+        document.body.className = state.toLowerCase();
+    }
+</script>
 
 </body>
 </html>
