@@ -18,26 +18,34 @@ ALIASES = {
     "zed": "zed",
 }
 
+OPEN_WORDS = (
+    "abre",
+    "abrir",
+    "abra",
+)
+
 
 def parse(text: str):
 
     text = text.lower().strip()
 
-    if text.startswith("abre"):
+    for word in OPEN_WORDS:
 
-        target = text.removeprefix("abre").strip()
+        if text.startswith(word):
 
-        # remove artigos
-        for article in ("o ", "a ", "os ", "as "):
-            if target.startswith(article):
-                target = target.removeprefix(article)
+            target = text.removeprefix(word).strip()
 
-        target = ALIASES.get(target, target)
+            # remove artigos
+            for article in ("o ", "a ", "os ", "as "):
+                if target.startswith(article):
+                    target = target.removeprefix(article)
 
-        return create_message(
-            MessageType.COMMAND,
-            command="open_program",
-            target=target,
-        )
+            target = ALIASES.get(target, target)
+
+            return create_message(
+                MessageType.COMMAND,
+                command="open_program",
+                target=target,
+            )
 
     return None

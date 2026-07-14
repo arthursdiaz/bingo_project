@@ -25,10 +25,16 @@ async def handle_client(websocket):
 
                 debug(f"Received: {message}")
 
-                response = dispatcher.dispatch(message)
-
-                if response is not None:
-                    await websocket.send(response)
+                try:
+                    response = dispatcher.dispatch(message)
+                
+                    if response is not None:
+                        await websocket.send(response)
+                
+                except Exception as e:
+                    from bingo.logger import error
+                
+                    error(f"Dispatcher failed: {e}")
 
     finally:
         state.connected_clients -= 1

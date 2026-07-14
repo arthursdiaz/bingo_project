@@ -14,6 +14,7 @@ class MessageType(str, Enum):
     EMOTION = "emotion"
 
     STATUS = "status"
+    STATUS_INFO = "status_info"
 
 
 def create_message(message_type: MessageType, **kwargs):

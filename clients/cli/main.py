@@ -45,6 +45,13 @@ async def main():
                         MessageType.PING
                     )
                 )
+            elif command == "status":
+            
+                await websocket.send(
+                    create_message(
+                        MessageType.STATUS
+                    )
+                )
 
             else:
 
@@ -57,9 +64,32 @@ async def main():
 
                 await websocket.send(message)
 
-            response = await websocket.recv()
+            response = parse_message(
+                await websocket.recv()
+            )
 
-            print(parse_message(response))
-
-
+            if response["type"] == "status_info":
+            
+                print()
+                print("========================")
+                print("🤖 Bingo Status")
+                print("========================")
+                print()
+            
+                print(f"Clients: {response['clients']}")
+                print()
+            
+                print(f"Last command: {response['last_command']}")
+                print()
+            
+                print("Programs:")
+            
+                for program in response["running_programs"]:
+            
+                    print(f" - {program}")
+            
+                print()
+            else:
+                print(response)
+            
 asyncio.run(main())
