@@ -50,4 +50,31 @@ object TonePlayer {
             e.printStackTrace()
         }
     }
+
+    fun playConnected() {
+        try {
+            toneGenerator.startTone(ToneGenerator.TONE_PROP_BEEP, 80)
+            handler.postDelayed({
+                toneGenerator.startTone(ToneGenerator.TONE_PROP_BEEP, 80)
+            }, 120)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    fun playDisconnected() {
+        try {
+            toneGenerator.startTone(ToneGenerator.TONE_PROP_BEEP2, 200)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    fun playReconnecting() {
+        try {
+            toneGenerator.startTone(ToneGenerator.TONE_PROP_BEEP, 100)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
 }

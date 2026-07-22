@@ -3,6 +3,7 @@ package com.arthurdiaz.bingo.network
 import org.java_websocket.client.WebSocketClient
 import org.java_websocket.handshake.ServerHandshake
 import java.net.URI
+import org.json.JSONObject
 
 class BingoSocket(
     serverUrl: String
@@ -26,6 +27,17 @@ class BingoSocket(
         println("Received: $message")
 
         message?.let {
+
+            try {
+                val json = JSONObject(it)
+                if (json.optString("type") == "ping") {
+                    val pong = JSONObject().put("type", "pong").toString()
+                    send(pong)
+                    return
+                }
+            } catch (e: Exception) {
+                // Ignore JSON parsing exceptions
+            }
 
             onMessageReceived?.invoke(it)
 

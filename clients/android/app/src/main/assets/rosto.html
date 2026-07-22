@@ -56,12 +56,12 @@
           transition: all 0.4s ease;
         }
 
-        /* SLEEPING State */
-        body.sleeping .screen {
+        /* SLEEPING / DISCONNECTED State */
+        body.sleeping .screen, body.disconnected .screen {
             background: #8ec3a7;
             filter: grayscale(0.3) brightness(0.8);
         }
-        body.sleeping .eye {
+        body.sleeping .eye, body.disconnected .eye {
             height: 4px;
             width: 36px;
             border-radius: 2px;
@@ -71,7 +71,7 @@
             0%, 100% { transform: scale(1); opacity: 0.6; }
             50% { transform: scale(1.1); opacity: 0.8; }
         }
-        body.sleeping .mouth {
+        body.sleeping .mouth, body.disconnected .mouth {
             width: 30px;
             height: 15px;
             border-bottom: 4px solid #0a1d20;
@@ -79,13 +79,33 @@
             border-radius: 0;
         }
 
-        /* IDLE State (Default) */
-        body.idle .mouth {
+        /* CONNECTING State */
+        body.connecting .eye {
+            animation: alternateBlink 0.5s infinite alternate;
+        }
+        @keyframes alternateBlink {
+            from { opacity: 1; }
+            to { opacity: 0.3; }
+        }
+
+        /* IDLE / CONNECTED State */
+        body.idle .mouth, body.connected .mouth {
             animation: idleTalk 10s infinite ease-in-out;
         }
         @keyframes idleTalk {
             0%, 100%, 40%, 60% { height: 40px; transform: scaleX(1); }
             50% { height: 35px; transform: scaleX(1.05); }
+        }
+
+        /* ERROR State */
+        body.error .screen {
+            background: #f5afaf;
+        }
+        body.error .eye {
+            height: 10px;
+            width: 36px;
+            border-radius: 5px;
+            transform: rotate(10deg);
         }
 
         /* LISTENING State */
@@ -131,7 +151,7 @@
 
     </style>
 </head>
-<body class="sleeping">
+<body class="disconnected">
 
 <div class="screen">
     <div class="eyes">

@@ -8,6 +8,8 @@ import android.os.Looper
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
+import android.util.Log
+import com.arthurdiaz.bingo.audio.feedback.SpeechFeedback
 import com.arthurdiaz.bingo.audio.feedback.TonePlayer
 import com.arthurdiaz.bingo.network.BingoSocket
 import com.arthurdiaz.bingo.protocol.Message
@@ -15,18 +17,142 @@ import java.io.File
 
 class VoiceController(
     private val context: Context,
-    private val socket: BingoSocket,
+    private val serverUrl: String,
     private val recorder: Recorder,
     private val audioFile: File,
-    private val onStateChanged: (VoiceState) -> Unit
+    private val onStateChanged: (VoiceState) -> Unit,
+    private val onResponse: (String) -> Unit
 ) {
 
     private var speechRecognizer: SpeechRecognizer? = null
     private val handler = Handler(Looper.getMainLooper())
-    private var currentState = VoiceState.IDLE
+    private var currentState = VoiceState.DISCONNECTED
+    private val speechFeedback = SpeechFeedback(context)
+    
+    private var currentSocket: BingoSocket? = null
+    private var reconnectAttempt = 0
+    private val backoffMultipliers = listOf(1000L, 2000L, 5000L, 10000L)
+    private var isManuallyClosed = false
+
+    private val RECONNECT_TOKEN = Any()
 
     init {
         setupSpeechRecognizer()
+    }
+
+    fun connect() {
+        Log.d("VoiceController", "Connecting to $serverUrl")
+        isManuallyClosed = false
+        handler.removeCallbacksAndMessages(RECONNECT_TOKEN)
+        
+        currentState = VoiceState.CONNECTING
+        onStateChanged(VoiceState.CONNECTING)
+        TonePlayer.playReconnecting()
+        
+        createNewSocket()
+    }
+
+    private fun createNewSocket() {
+        // 1. Clean up old socket
+        currentSocket?.let { oldSocket ->
+            oldSocket.onConnected = null
+            oldSocket.onDisconnected = null
+            oldSocket.onMessageReceived = null
+            try {
+                oldSocket.close()
+            } catch (e: Exception) {
+                Log.e("VoiceController", "Error closing old socket", e)
+            }
+        }
+
+        // 2. Create new instance
+        val newSocket = BingoSocket(serverUrl)
+        
+        newSocket.onConnected = {
+            handler.post {
+                if (currentSocket != newSocket) return@post
+                
+                val wasReconnecting = currentState == VoiceState.CONNECTING
+                currentState = VoiceState.IDLE
+                onStateChanged(VoiceState.IDLE)
+                reconnectAttempt = 0
+                
+                TonePlayer.playConnected()
+                if (wasReconnecting) {
+                    speechFeedback.sayReconnected()
+                } else {
+                    speechFeedback.sayConnected()
+                }
+                
+                startHotwordDetection()
+            }
+        }
+
+        newSocket.onDisconnected = {
+            handler.post {
+                if (currentSocket != newSocket) return@post
+                if (!isManuallyClosed) {
+                    currentState = VoiceState.DISCONNECTED
+                    onStateChanged(VoiceState.DISCONNECTED)
+                    TonePlayer.playDisconnected()
+                    speechFeedback.sayLostConnection()
+                    scheduleReconnection()
+                }
+            }
+        }
+
+        newSocket.onMessageReceived = { message ->
+            handler.post {
+                if (currentSocket != newSocket) return@post
+                onResponse(message)
+                onResponseReceived()
+            }
+        }
+
+        currentSocket = newSocket
+
+        // 3. Connect
+        try {
+            newSocket.connect()
+        } catch (e: Exception) {
+            Log.e("VoiceController", "Error starting socket connection", e)
+            handler.post {
+                currentState = VoiceState.DISCONNECTED
+                onStateChanged(VoiceState.DISCONNECTED)
+                scheduleReconnection()
+            }
+        }
+    }
+
+    private fun scheduleReconnection() {
+        if (isManuallyClosed) return
+        
+        handler.removeCallbacksAndMessages(RECONNECT_TOKEN)
+        
+        val delay = backoffMultipliers.getOrElse(reconnectAttempt) { backoffMultipliers.last() }
+        reconnectAttempt++
+        
+        Log.d("VoiceController", "Scheduling reconnection in ${delay}ms (attempt $reconnectAttempt)")
+        
+        handler.postAtTime({
+            if (currentState == VoiceState.DISCONNECTED) {
+                connect()
+            }
+        }, RECONNECT_TOKEN, android.os.SystemClock.uptimeMillis() + delay)
+    }
+
+    fun send(message: String) {
+        try {
+            currentSocket?.let {
+                if (it.isOpen) {
+                    it.send(message)
+                } else {
+                    Log.w("VoiceController", "Socket is not open, cannot send message")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("VoiceController", "Error sending message", e)
+        }
     }
 
     private fun setupSpeechRecognizer() {
@@ -67,6 +193,8 @@ class VoiceController(
     }
 
     fun startHotwordDetection() {
+        if (currentState != VoiceState.IDLE) return
+        
         handler.post {
             val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
                 putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
@@ -100,7 +228,7 @@ class VoiceController(
         recorder.stop()
 
         val base64 = Encoder.encode(audioFile)
-        socket.send(Message.audio("audio.m4a", base64))
+        send(Message.audio("audio.m4a", base64))
         
         handler.postDelayed({
             if (currentState == VoiceState.PROCESSING) {
@@ -112,23 +240,44 @@ class VoiceController(
     fun onResponseReceived() {
         if (currentState == VoiceState.PROCESSING) {
             TonePlayer.playSuccess()
+            speechFeedback.saySuccess()
             resetToIdle()
         }
     }
 
     fun onError() {
+        currentState = VoiceState.ERROR
+        onStateChanged(VoiceState.ERROR)
         TonePlayer.playError()
-        resetToIdle()
+        speechFeedback.sayError()
+        handler.postDelayed({
+            resetToIdle()
+        }, 3000)
     }
 
     fun resetToIdle() {
         handler.removeCallbacksAndMessages(null)
-        currentState = VoiceState.IDLE
-        onStateChanged(VoiceState.IDLE)
-        startHotwordDetection()
+        if (currentSocket?.isOpen == true) {
+            currentState = VoiceState.IDLE
+            onStateChanged(VoiceState.IDLE)
+            startHotwordDetection()
+        } else {
+            currentState = VoiceState.DISCONNECTED
+            onStateChanged(VoiceState.DISCONNECTED)
+            scheduleReconnection()
+        }
     }
 
     fun destroy() {
+        isManuallyClosed = true
+        handler.removeCallbacksAndMessages(null)
         speechRecognizer?.destroy()
+        speechFeedback.shutdown()
+        currentSocket?.let {
+            it.onConnected = null
+            it.onDisconnected = null
+            it.onMessageReceived = null
+            if (it.isOpen) it.close()
+        }
     }
 }

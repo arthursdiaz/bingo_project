@@ -20,7 +20,8 @@ async def main():
 
         while True:
 
-            command = input("\n> ").strip()
+            command = await asyncio.to_thread(input, "\n> ")
+            command = command.strip()
 
             if command == "exit":
                 break
@@ -58,6 +59,8 @@ async def main():
                 print()
             
                 print(f"Clients: {response['clients']}")
+                print(f"Total Connections: {response.get('total_connections', 0)}")
+                print(f"Server Uptime: {response.get('uptime', 0)} seconds")
                 print()
             
                 print(f"Last command: {response['last_command']}")
@@ -70,6 +73,13 @@ async def main():
                     print(f" - {program}")
             
                 print()
+
+                clients_info = response.get("clients_info", [])
+                if clients_info:
+                    print("Connected Clients Info:")
+                    for c in clients_info:
+                        print(f" - Client #{c['id']} ({c['ip']}:{c['port']}) | Status: {c['status']} | Connected: {c['connected_time']}s | Last Heartbeat: {c['last_heartbeat']}")
+                    print()
             else:
                 print(response)
             

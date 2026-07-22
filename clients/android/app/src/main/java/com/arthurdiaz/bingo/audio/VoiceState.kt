@@ -1,8 +1,12 @@
 package com.arthurdiaz.bingo.audio
 
 enum class VoiceState {
-    SLEEPING,
+    DISCONNECTED,
+    CONNECTING,
+    CONNECTED,
     IDLE,
     LISTENING,
-    PROCESSING
+    PROCESSING,
+    SPEAKING,
+    ERROR
 }
