@@ -40,19 +40,28 @@ class VoiceController(
         setupSpeechRecognizer()
     }
 
-    fun connect() {
-        Log.d("VoiceController", "Connecting to $serverUrl")
+    fun connect(isAutomatic: Boolean = false) {
+        Log.d("VoiceController", "Connecting to $serverUrl (auto=$isAutomatic)")
         isManuallyClosed = false
         handler.removeCallbacksAndMessages(RECONNECT_TOKEN)
         
+        if (!isAutomatic) {
+            reconnectAttempt = 0
+        }
+
+        val isReconnection = reconnectAttempt > 0
+        
         currentState = VoiceState.CONNECTING
         onStateChanged(VoiceState.CONNECTING)
-        TonePlayer.playReconnecting()
         
-        createNewSocket()
+        if (isReconnection) {
+            TonePlayer.playReconnecting()
+        }
+        
+        createNewSocket(isReconnection)
     }
 
-    private fun createNewSocket() {
+    private fun createNewSocket(isReconnection: Boolean) {
         // 1. Clean up old socket
         currentSocket?.let { oldSocket ->
             oldSocket.onConnected = null
@@ -72,13 +81,12 @@ class VoiceController(
             handler.post {
                 if (currentSocket != newSocket) return@post
                 
-                val wasReconnecting = currentState == VoiceState.CONNECTING
                 currentState = VoiceState.IDLE
                 onStateChanged(VoiceState.IDLE)
                 reconnectAttempt = 0
                 
                 TonePlayer.playConnected()
-                if (wasReconnecting) {
+                if (isReconnection) {
                     speechFeedback.sayReconnected()
                 } else {
                     speechFeedback.sayConnected()
@@ -136,7 +144,7 @@ class VoiceController(
         
         handler.postAtTime({
             if (currentState == VoiceState.DISCONNECTED) {
-                connect()
+                connect(isAutomatic = true)
             }
         }, RECONNECT_TOKEN, android.os.SystemClock.uptimeMillis() + delay)
     }

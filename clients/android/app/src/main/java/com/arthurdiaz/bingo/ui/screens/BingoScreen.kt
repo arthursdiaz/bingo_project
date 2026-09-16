@@ -39,7 +39,7 @@ fun BingoScreen() {
     val voiceController = remember {
         VoiceController(
             context = context,
-            serverUrl = "ws://192.168.0.18:8765",
+            serverUrl = "ws://192.168.0.19:8765",
             recorder = recorder,
             audioFile = audioFile,
             onStateChanged = { newState -> voiceState = newState },

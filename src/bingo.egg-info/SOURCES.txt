@@ -22,7 +22,12 @@ src/bingo/actions/ping.py
 src/bingo/actions/status.py
 src/bingo/client/__init__.py
 src/bingo/client/websocket.py
+src/bingo/network/__init__.py
+src/bingo/network/client_manager.py
+src/bingo/network/heartbeat.py
+src/bingo/network/session.py
 src/bingo/speech/__init__.py
+src/bingo/speech/normalizer.py
 src/bingo/speech/processor.py
 src/bingo/speech/receiver.py
 src/bingo/speech/service.py
