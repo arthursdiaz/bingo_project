@@ -105,13 +105,51 @@ uv run python -m bingo.main
 
 ### 2. Executar o Cliente CLI
 
-Em outro terminal, para interagir via texto:
-
 ```bash
 uv run clients/cli/main.py
 ```
 
-### 3. Executar o App Android
+Ou execute um comando direto sem entrar no modo interativo:
+
+```bash
+uv run clients/cli/main.py "tocar playlist"
+```
+
+### 3. Automação de Música no Chromecast (Terminal)
+
+Validação de pré-requisitos (Vivaldi, CDP e Chromecast na rede):
+
+```bash
+uv run bingo-music --check
+```
+
+Iniciar a playlist com shuffle e transmissão para o Chromecast:
+
+```bash
+uv run bingo-music
+```
+
+Opções adicionais:
+
+```bash
+uv run bingo-music --playlist "URL_DA_PLAYLIST" --device "NOME_DO_CHROMECAST" --no-shuffle
+```
+
+Para habilitar a depuração remota e transmissão automática sem clique manual (caso o Vivaldi já esteja aberto sem CDP):
+
+```bash
+uv run bingo-music --restart-vivaldi
+```
+
+> **Nota de Segurança e Validação:** A porta CDP é estritamente vinculada a `127.0.0.1` (localhost). O Bingo valida a transmissão consultando o status real do Chromecast via PyChromecast, diferenciando a reprodução local no computador da sessão ativa na TV.
+
+### 4. Executar os Testes Automatizados
+
+```bash
+uv run python -m unittest tests/test_music.py
+```
+
+### 5. Executar o App Android
 
  Abra a pasta `clients/android` no **Android Studio** e execute o projeto no seu dispositivo ou emulador conectado à mesma rede local do servidor Bingo.
 

@@ -12,5 +12,6 @@ enum class MessageType(
     STATUS("status"),
     STATUS_INFO("status_info"),
 
-    AUDIO("audio")
+    AUDIO("audio"),
+    MUSIC("music")
 }

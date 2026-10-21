@@ -5,19 +5,21 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.util.Log
-import com.arthurdiaz.bingo.audio.feedback.SpeechFeedback
 import com.arthurdiaz.bingo.audio.feedback.TonePlayer
+import com.arthurdiaz.bingo.music.MusicPlaybackState
 import com.arthurdiaz.bingo.network.BingoSocket
 import com.arthurdiaz.bingo.protocol.Message
+import org.json.JSONObject
 import java.io.File
 
 class VoiceController(
     private val context: Context,
-    private val serverUrl: String,
+    private var serverUrl: String,
     private val recorder: Recorder,
     private val audioFile: File,
     private val onStateChanged: (VoiceState) -> Unit,
@@ -27,7 +29,6 @@ class VoiceController(
     private var speechRecognizer: SpeechRecognizer? = null
     private val handler = Handler(Looper.getMainLooper())
     private var currentState = VoiceState.DISCONNECTED
-    private val speechFeedback = SpeechFeedback(context)
     
     private var currentSocket: BingoSocket? = null
     private var reconnectAttempt = 0
@@ -35,9 +36,27 @@ class VoiceController(
     private var isManuallyClosed = false
 
     private val RECONNECT_TOKEN = Any()
+    private val MUSIC_TIMEOUT_TOKEN = Any()
+    private val VOICE_TOKEN = Any()
+
+    var musicState: MusicPlaybackState = MusicPlaybackState.Idle
+        private set
+    var onMusicStateChanged: ((MusicPlaybackState) -> Unit)? = null
+    private var pendingMusicRequestId: String? = null
 
     init {
         setupSpeechRecognizer()
+    }
+
+    fun isConnected(): Boolean {
+        return currentSocket?.isOpen == true
+    }
+
+    fun getServerUrl(): String = serverUrl
+
+    fun updateServerUrl(newUrl: String) {
+        serverUrl = newUrl
+        connect(isAutomatic = false)
     }
 
     fun connect(isAutomatic: Boolean = false) {
@@ -59,6 +78,124 @@ class VoiceController(
         }
         
         createNewSocket(isReconnection)
+    }
+
+    private fun updateMusicState(newState: MusicPlaybackState) {
+        musicState = newState
+        onMusicStateChanged?.invoke(newState)
+    }
+
+    fun playMusic(
+        playlistUrl: String? = null,
+        device: String? = null,
+        shuffle: Boolean = true
+    ): Boolean {
+        if (!isConnected()) {
+            TonePlayer.playError()
+            updateMusicState(MusicPlaybackState.Offline)
+            handler.postDelayed({
+                if (musicState is MusicPlaybackState.Offline) {
+                    updateMusicState(MusicPlaybackState.Idle)
+                }
+            }, 3000)
+            return false
+        }
+
+        if (musicState is MusicPlaybackState.Loading) {
+            // Previne cliques múltiplos enquanto uma operação está em andamento
+            Log.w("VoiceController", "Música já está sendo carregada, ignorando clique repetido")
+            return false
+        }
+
+        val reqId = "music_${System.currentTimeMillis()}"
+        pendingMusicRequestId = reqId
+        updateMusicState(MusicPlaybackState.Loading)
+
+        val message = Message.playMusic(
+            id = reqId,
+            playlistUrl = playlistUrl,
+            device = device,
+            shuffle = shuffle
+        )
+        send(message)
+
+        // Safety timeout de 45 segundos para restaurar o estado caso o núcleo não responda
+        handler.removeCallbacksAndMessages(MUSIC_TIMEOUT_TOKEN)
+        handler.postAtTime({
+            if (musicState is MusicPlaybackState.Loading) {
+                TonePlayer.playError()
+                updateMusicState(MusicPlaybackState.Error("Tempo limite excedido ao aguardar o Chromecast"))
+                handler.postDelayed({
+                    if (musicState is MusicPlaybackState.Error) {
+                        updateMusicState(MusicPlaybackState.Idle)
+                    }
+                }, 5000)
+            }
+        }, MUSIC_TIMEOUT_TOKEN, SystemClock.uptimeMillis() + 45000L)
+
+        return true
+    }
+
+    private fun handleStatusMessage(message: String) {
+        try {
+            val json = JSONObject(message)
+            val type = json.optString("type")
+            if (type != "status") return
+
+            val command = json.optString("command")
+            val msgId = json.optString("id")
+            val data = json.optJSONObject("data")
+            val isMusicMsg = command == "play_music" || 
+                (pendingMusicRequestId != null && msgId == pendingMusicRequestId) ||
+                data?.has("cast_stream") == true
+
+            if (!isMusicMsg) return
+
+            val status = json.optString("status")
+            if (status == "in_progress") {
+                // Solicitação aceita e execução em andamento no núcleo
+                updateMusicState(MusicPlaybackState.Loading)
+                return
+            }
+
+            handler.removeCallbacksAndMessages(MUSIC_TIMEOUT_TOKEN)
+
+            val isSuccess = json.optBoolean("success", false)
+            if (isSuccess) {
+                val castStream = data?.optJSONObject("cast_stream")
+                val localPlayback = data?.optJSONObject("local_playback")
+                val rawTrack = localPlayback?.optString("track")
+                val track = if (!rawTrack.isNullOrBlank() && rawTrack != "Desconhecido") rawTrack else null
+                val targetDevice = castStream?.optString("device")?.takeIf { it.isNotBlank() } ?: "TutuLola"
+                
+                TonePlayer.playSuccess()
+                updateMusicState(MusicPlaybackState.Playing(track = track, device = targetDevice))
+            } else {
+                TonePlayer.playError()
+                val mode = data?.optString("mode")
+                val castStream = data?.optJSONObject("cast_stream")
+                val castStatus = castStream?.optString("status")
+                val isBusy = mode == "cdp_cast_busy_other_app" || castStatus == "busy_other_app"
+
+                if (isBusy) {
+                    val appName = castStream?.optString("display_name") ?: "Outro App"
+                    val dev = castStream?.optString("device") ?: "TutuLola"
+                    updateMusicState(MusicPlaybackState.Busy(appName = appName, device = dev))
+                } else {
+                    val errMsg = json.optString("message").ifEmpty { "Falha na transmissão para o Chromecast" }
+                    updateMusicState(MusicPlaybackState.Error(errMsg))
+                }
+
+                // Restaura para Idle após 5 segundos para permitir nova tentativa
+                handler.postDelayed({
+                    if (musicState !is MusicPlaybackState.Playing) {
+                        updateMusicState(MusicPlaybackState.Idle)
+                    }
+                }, 5000)
+            }
+        } catch (e: Exception) {
+            Log.e("VoiceController", "Erro ao processar mensagem de status musical", e)
+        }
     }
 
     private fun createNewSocket(isReconnection: Boolean) {
@@ -86,12 +223,6 @@ class VoiceController(
                 reconnectAttempt = 0
                 
                 TonePlayer.playConnected()
-                if (isReconnection) {
-                    speechFeedback.sayReconnected()
-                } else {
-                    speechFeedback.sayConnected()
-                }
-                
                 startHotwordDetection()
             }
         }
@@ -103,7 +234,17 @@ class VoiceController(
                     currentState = VoiceState.DISCONNECTED
                     onStateChanged(VoiceState.DISCONNECTED)
                     TonePlayer.playDisconnected()
-                    speechFeedback.sayLostConnection()
+
+                    handler.removeCallbacksAndMessages(MUSIC_TIMEOUT_TOKEN)
+                    if (musicState is MusicPlaybackState.Loading || musicState is MusicPlaybackState.Playing) {
+                        updateMusicState(MusicPlaybackState.Offline)
+                        handler.postDelayed({
+                            if (musicState is MusicPlaybackState.Offline) {
+                                updateMusicState(MusicPlaybackState.Idle)
+                            }
+                        }, 4000)
+                    }
+
                     scheduleReconnection()
                 }
             }
@@ -113,6 +254,7 @@ class VoiceController(
             handler.post {
                 if (currentSocket != newSocket) return@post
                 onResponse(message)
+                handleStatusMessage(message)
                 onResponseReceived()
             }
         }
@@ -146,7 +288,7 @@ class VoiceController(
             if (currentState == VoiceState.DISCONNECTED) {
                 connect(isAutomatic = true)
             }
-        }, RECONNECT_TOKEN, android.os.SystemClock.uptimeMillis() + delay)
+        }, RECONNECT_TOKEN, SystemClock.uptimeMillis() + delay)
     }
 
     fun send(message: String) {
@@ -222,9 +364,9 @@ class VoiceController(
         recorder.start()
 
         // Record for 5 seconds
-        handler.postDelayed({
+        handler.postAtTime({
             stopAndProcess()
-        }, 5000)
+        }, VOICE_TOKEN, SystemClock.uptimeMillis() + 5000L)
     }
 
     private fun stopAndProcess() {
@@ -238,17 +380,16 @@ class VoiceController(
         val base64 = Encoder.encode(audioFile)
         send(Message.audio("audio.m4a", base64))
         
-        handler.postDelayed({
+        handler.postAtTime({
             if (currentState == VoiceState.PROCESSING) {
                 resetToIdle()
             }
-        }, 12000) 
+        }, VOICE_TOKEN, SystemClock.uptimeMillis() + 12000L)
     }
 
     fun onResponseReceived() {
         if (currentState == VoiceState.PROCESSING) {
             TonePlayer.playSuccess()
-            speechFeedback.saySuccess()
             resetToIdle()
         }
     }
@@ -257,14 +398,13 @@ class VoiceController(
         currentState = VoiceState.ERROR
         onStateChanged(VoiceState.ERROR)
         TonePlayer.playError()
-        speechFeedback.sayError()
-        handler.postDelayed({
+        handler.postAtTime({
             resetToIdle()
-        }, 3000)
+        }, VOICE_TOKEN, SystemClock.uptimeMillis() + 3000L)
     }
 
     fun resetToIdle() {
-        handler.removeCallbacksAndMessages(null)
+        handler.removeCallbacksAndMessages(VOICE_TOKEN)
         if (currentSocket?.isOpen == true) {
             currentState = VoiceState.IDLE
             onStateChanged(VoiceState.IDLE)
@@ -280,7 +420,6 @@ class VoiceController(
         isManuallyClosed = true
         handler.removeCallbacksAndMessages(null)
         speechRecognizer?.destroy()
-        speechFeedback.shutdown()
         currentSocket?.let {
             it.onConnected = null
             it.onDisconnected = null

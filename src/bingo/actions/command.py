@@ -28,13 +28,23 @@ def execute(message):
     command = message.get("command")
     target = message.get("target")
 
-    if target not in PROGRAMS:
+    if command == "play_music":
+        from bingo.actions.music import execute as music_execute
+        return music_execute(message)
 
-        return create_dict(
+    req_id = message.get("id")
+
+    def _with_id(d):
+        if req_id is not None:
+            d["id"] = req_id
+        return d
+
+    if target not in PROGRAMS:
+        return _with_id(create_dict(
             MessageType.STATUS,
             success=False,
             message=f"Unknown program: {target}"
-        )
+        ))
 
     try:
 
@@ -53,11 +63,11 @@ def execute(message):
 
             if process is None:
 
-                return create_dict(
+                return _with_id(create_dict(
                     MessageType.STATUS,
                     success=False,
                     message=f"Cannot close {target}"
-                )
+                ))
 
             subprocess.run(
                 ["pkill", "-f", process],
@@ -71,26 +81,26 @@ def execute(message):
 
         else:
 
-            return create_dict(
+            return _with_id(create_dict(
                 MessageType.STATUS,
                 success=False,
                 message="Invalid command."
-            )
+            ))
 
         info(f"Connected clients: {state.connected_clients}")
         info(f"Running programs: {list(state.running_programs)}")
         info(f"Last command: {state.last_command}")
 
-        return create_dict(
+        return _with_id(create_dict(
             MessageType.STATUS,
             success=True,
             message=f"{action} {target}."
-        )
+        ))
 
     except Exception as e:
 
-        return create_dict(
+        return _with_id(create_dict(
             MessageType.STATUS,
             success=False,
             message=str(e)
-        )
+        ))

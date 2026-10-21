@@ -1,4 +1,4 @@
-from bingo.actions import ping, command, status, audio
+from bingo.actions import ping, command, status, audio, music
 from bingo.protocol import MessageType
 
 HANDLERS = {
@@ -6,4 +6,5 @@ HANDLERS = {
     MessageType.COMMAND.value: command.execute,
     MessageType.STATUS.value: status.execute,
     MessageType.AUDIO.value: audio.execute,
+    MessageType.MUSIC.value: music.execute,
 }

@@ -13,11 +13,13 @@ src/bingo/state.py
 src/bingo.egg-info/PKG-INFO
 src/bingo.egg-info/SOURCES.txt
 src/bingo.egg-info/dependency_links.txt
+src/bingo.egg-info/entry_points.txt
 src/bingo.egg-info/requires.txt
 src/bingo.egg-info/top_level.txt
 src/bingo/actions/__init__.py
 src/bingo/actions/audio.py
 src/bingo/actions/command.py
+src/bingo/actions/music.py
 src/bingo/actions/ping.py
 src/bingo/actions/status.py
 src/bingo/client/__init__.py

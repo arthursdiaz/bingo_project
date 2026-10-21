@@ -17,6 +17,7 @@ class MessageType(str, Enum):
     STATUS_INFO = "status_info"
 
     AUDIO = "audio"
+    MUSIC = "music"
 
 
 def create_dict(message_type: MessageType, **kwargs):

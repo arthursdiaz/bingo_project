@@ -45,7 +45,7 @@ class SpeechFeedback(context: Context) {
     }
 
     fun sayError() {
-        say("Houve um erro.")
+        say("Ocorreu um erro.")
     }
 
     fun shutdown() {

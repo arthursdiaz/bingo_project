@@ -8,14 +8,21 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.arthurdiaz.bingo.music.MusicPlaybackState
 import com.arthurdiaz.bingo.ui.theme.BingoActionRed
 import com.arthurdiaz.bingo.ui.theme.BingoDarkJungle
+import com.arthurdiaz.bingo.ui.theme.BingoLightTeal
+import com.arthurdiaz.bingo.ui.theme.BingoTeal
 import com.arthurdiaz.bingo.ui.theme.BingoYellow
 
 @Composable
 fun BingoMenu(
-    onOpenProgram: (String) -> Unit
+    onOpenProgram: (String) -> Unit,
+    musicState: MusicPlaybackState = MusicPlaybackState.Idle,
+    onPlayMusic: () -> Unit = {}
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -44,6 +51,56 @@ fun BingoMenu(
                         style = MaterialTheme.typography.titleMedium,
                         color = Color.White
                     )
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Seção de Música / Chromecast
+                    Text("Música & Chromecast", color = Color.Gray)
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    val (musicBtnText, musicBtnColor, musicBtnEnabled) = when (musicState) {
+                        is MusicPlaybackState.Loading -> Triple("Transmitindo...", BingoYellow, false)
+                        is MusicPlaybackState.Playing -> {
+                            val label = if (musicState.track != null) "Tocando: ${musicState.track}" else "Tocando Música ✓"
+                            Triple(label, BingoLightTeal, true)
+                        }
+                        is MusicPlaybackState.Busy -> Triple("Ocupado (${musicState.appName})", BingoActionRed, true)
+                        is MusicPlaybackState.Error -> Triple("Falha (Tentar novamente)", BingoActionRed, true)
+                        is MusicPlaybackState.Offline -> Triple("Offline", Color.Gray, false)
+                    is MusicPlaybackState.Idle -> Triple("Tocar Música", BingoTeal, true)
+                    }
+
+                    Button(
+                        onClick = {
+                            if (musicBtnEnabled) {
+                                onPlayMusic()
+                            }
+                        },
+                        enabled = musicBtnEnabled,
+                        modifier = Modifier.fillMaxWidth().height(52.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = musicBtnColor,
+                            contentColor = BingoDarkJungle,
+                            disabledContainerColor = musicBtnColor.copy(alpha = 0.6f),
+                            disabledContentColor = BingoDarkJungle.copy(alpha = 0.6f)
+                        )
+                    ) {
+                        if (musicState is MusicPlaybackState.Loading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                color = BingoDarkJungle,
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                        }
+                        Text(
+                            text = musicBtnText,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Text("Programas", color = Color.Gray)
@@ -126,6 +183,6 @@ fun BingoRectButton(
             contentColor = BingoDarkJungle
         )
     ) {
-        Text(text, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+        Text(text, fontWeight = FontWeight.Bold)
     }
 }

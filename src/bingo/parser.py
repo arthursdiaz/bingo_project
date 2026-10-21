@@ -41,6 +41,27 @@ CLOSE_WORDS = (
     "encerrar",
 )
 
+PLAY_WORDS = (
+    "toca",
+    "tocar",
+    "toque",
+    "reproduz",
+    "reproduzir",
+    "reproduza",
+    "ouvir",
+    "ouça",
+    "play",
+)
+
+MUSIC_KEYWORDS = (
+    "musica",
+    "música",
+    "playlist",
+    "salgadinho",
+    "som",
+    "chromecast",
+)
+
 def fuzzy_target(word: str):
 
     result = process.extractOne(
@@ -107,5 +128,26 @@ def parse(text: str):
                 command="close_program",
                 target=target,
             )
+
+    for word in PLAY_WORDS:
+
+        if text.startswith(word):
+
+            target = text.removeprefix(word).strip()
+
+            for article in ("o ", "a ", "os ", "as ", "uma ", "um "):
+                if target.startswith(article):
+                    target = target.removeprefix(article)
+
+            if not target or any(k in target for k in MUSIC_KEYWORDS):
+                from bingo.actions.music import DEFAULT_PLAYLIST_URL
+                return create_dict(
+                    MessageType.COMMAND,
+                    command="play_music",
+                    target="playlist",
+                    playlist_url=DEFAULT_PLAYLIST_URL,
+                    shuffle=True,
+                    device="TutuLola",
+                )
 
     return None

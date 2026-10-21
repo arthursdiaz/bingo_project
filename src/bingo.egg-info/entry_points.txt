@@ -1,0 +1,3 @@
+[console_scripts]
+bingo-music = bingo.actions.music:cli_main
+bingo-server = bingo.main:main
